@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>FANI — Centro de Control Numérico | U.M.S.A.</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Plotly JS -->
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 30%, #0a0f1f, #03060c);
+      font-family: 'Inter', sans-serif;
+      color: #eef5ff;
+      line-height: 1.5;
+      scroll-behavior: smooth;
+    }
+
+    /* tipografía mono para datos técnicos */
+    .matrix-cell, .input-field, .input-select, .result-highlight, .tabla-wrapper, .caso-params {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* HEADER mejorado */
+    .site-header {
+      background: rgba(5, 10, 25, 0.75);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 255, 255, 0.25);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    /* radar icon mejorado */
+    .radar-icon {
+      position: relative;
+      width: 48px;
+      height: 48px;
+    }
+    .radar-ring {
+      position: absolute;
+      border: 2px solid #0cf;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.6;
+    }
+    .r1 { width: 48px; height: 48px; border-width: 1px; }
+    .r2 { width: 34px; height: 34px; border-width: 1px; border-color: #0cf8; }
+    .r3 { width: 20px; height: 20px; border-width: 1px; border-color: #0cfc; }
+    .radar-dot {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #0cf;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 8px #0cf;
+    }
+    .radar-sweep {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, rgba(0,204,255,0.2) 0deg, transparent 80deg);
+      animation: spin 3s linear infinite;
+      top: 0;
+      left: 0;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .brand-text .brand-acronym {
+      font-size: 1.7rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, #0cf);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .brand-subtitle {
+      font-size: 0.75rem;
+      opacity: 0.75;
+      display: block;
+    }
+    .header-status {
+      background: #071a2b;
+      padding: 0.4rem 1rem;
+      border-radius: 60px;
+      border-left: 3px solid #0cf;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #0f6;
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: 0 0 6px #0f6;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.4; transform: scale(0.8);}
+      100% { opacity: 1; transform: scale(1.2);}
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 3rem 2rem 4rem;
+      position: relative;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,30,50,0.6), transparent);
+    }
+    .hero-tag {
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #0cf;
+      background: rgba(0,204,255,0.12);
+      display: inline-block;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      backdrop-filter: blur(4px);
+    }
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 3.8rem);
+      font-weight: 800;
+      margin: 1rem 0;
+    }
+    .hero-title em {
+      font-style: normal;
+      background: linear-gradient(120deg, #0cf, #b3f0ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-desc {
+      max-width: 800px;
+      margin: 0 auto 1.5rem;
+      opacity: 0.8;
+    }
+    .hero-badges {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: rgba(10, 30, 50, 0.6);
+      backdrop-filter: blur(8px);
+      border-radius: 40px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      border: 1px solid rgba(0,204,255,0.3);
+    }
+
+    /* NAV */
+    .scenario-nav {
+      background: #060b17cc;
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid #0cf33;
+      position: sticky;
+      top: 70px;
+      z-index: 99;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: thin;
+    }
+    .nav-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.3rem;
+      padding: 0.8rem 2rem;
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: #ccdeff;
+      font-weight: 600;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-btn i { font-size: 0.9rem; }
+    .nav-btn.active {
+      background: #0cf22;
+      color: #0cf;
+      box-shadow: 0 0 8px #0cf4;
+      border-bottom: 2px solid #0cf;
+      border-radius: 40px 40px 20px 20px;
+    }
+    .nav-btn:hover {
+      background: #0cf1a;
+      color: white;
+    }
+    .nav-btn--casos {
+      background: linear-gradient(135deg, #f0b90b20, #ffaa0020);
+      border: 1px solid #f0b90b60;
+    }
+
+    /* MAIN */
+    .main-content {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .scenario-panel {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    .scenario-panel.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    .panel-header {
+      margin-bottom: 2rem;
+    }
+    .panel-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #0cf;
+      background: #0cf1a;
+      display: inline-block;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+    }
+    .panel-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0.5rem 0 0.25rem;
+    }
+    .panel-desc {
+      opacity: 0.7;
+      max-width: 800px;
+    }
+    .panel-body {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 1.8rem;
+    }
+    @media (max-width: 880px) {
+      .panel-body {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+      .header-inner { flex-direction: column; align-items: start; }
+      .scenario-nav { top: 90px; }
+    }
+    .control-card, .results-card {
+      background: rgba(12, 20, 35, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      border: 1px solid rgba(0, 204, 255, 0.2);
+      padding: 1.6rem;
+      transition: all 0.2s;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .control-card:hover, .results-card:hover {
+      border-color: #0cf55;
+      box-shadow: 0 0 15px rgba(0,204,255,0.1);
+    }
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-section-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: #9bbdff;
+      margin: 1rem 0 0.5rem;
+      letter-spacing: 1px;
+    }
+    .input-field, .input-select {
+      background: #0a1022;
+      border: 1px solid #2c3f66;
+      border-radius: 16px;
+      padding: 0.6rem 1rem;
+      color: white;
+      font-size: 0.9rem;
+      width: 100%;
+      transition: 0.2s;
+    }
+    .input-field:focus, .input-select:focus {
+      border-color: #0cf;
+      outline: none;
+      box-shadow: 0 0 5px #0cf6;
+    }
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .form-group {
+      flex: 1;
+      min-width: 120px;
+    }
+    .form-group label {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      display: block;
+      margin-bottom: 4px;
+    }
+    /* matriz grid */
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      gap: 8px;
+      align-items: center;
+      background: #03070f;
+      padding: 1rem;
+      border-radius: 20px;
+    }
+    .matrix-cell {
+      width: 70px;
+      background: #0b1424;
+      border: 1px solid #2a3a60;
+      border-radius: 12px;
+      padding: 8px;
+      text-align: center;
+      font-family: monospace;
+    }
+    .matrix-sep {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #0cf;
+      margin: 0 4px;
+    }
+    .btn-run, .btn-caso {
+      background: linear-gradient(95deg, #0a2f44, #0b5e7c);
+      border: none;
+      color: white;
+      font-weight: bold;
+      padding: 0.8rem 1.5rem;
+      border-radius: 40px;
+      margin-top: 1rem;
+      width: 100%;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-run:hover, .btn-caso:hover {
+      background: linear-gradient(95deg, #0f4b6e, #0e7a9e);
+      transform: scale(1.01);
+      box-shadow: 0 5px 12px #0cf3;
+    }
+    .btn-secondary {
+      background: #1e2a44;
+      border: 1px solid #2e4b77;
+      border-radius: 32px;
+      padding: 0.4rem 1rem;
+      color: #bbddff;
+      cursor: pointer;
+    }
+    .puntos-container {
+      background: #03070f70;
+      padding: 0.5rem;
+      border-radius: 20px;
+    }
+    .punto-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .btn-remove {
+      background: #aa2244;
+      border: none;
+      color: white;
+      border-radius: 30px;
+      width: 28px;
+      cursor: pointer;
+    }
+    .result-highlight {
+      background: #071a2a;
+      border-left: 5px solid #0cf;
+      padding: 0.8rem 1rem;
+      border-radius: 20px;
+      margin: 1rem 0;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .tabla-wrapper {
+      overflow-x: auto;
+      font-size: 0.8rem;
+      background: #03070f;
+      border-radius: 18px;
+      padding: 0.5rem;
+    }
+    .chart-container {
+      margin-top: 1rem;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .error-msg {
+      color: #ffa6b0;
+      background: #5a1e2e80;
+      padding: 0.8rem;
+      border-radius: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    /* casos estudio */
+    .casos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.8rem;
+      margin-top: 1rem;
+    }
+    .caso-card {
+      background: rgba(5, 15, 30, 0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 32px;
+      padding: 1.6rem;
+      border: 1px solid #2d5470;
+      transition: 0.2s;
+    }
+    .caso-num {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #0cf3;
+      line-height: 1;
+    }
+    .caso-header {
+      margin: 0.5rem 0;
+    }
+    .caso-tag {
+      font-size: 0.7rem;
+      background: #0cf2a;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+    }
+    .caso-title {
+      font-size: 1.3rem;
+      margin-top: 0.3rem;
+    }
+    .caso-params {
+      background: #030a14;
+      border-radius: 20px;
+      padding: 0.8rem;
+      margin: 1rem 0;
+    }
+    .param-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      border-bottom: 1px dashed #2c4c6e;
+      padding: 0.3rem 0;
+    }
+    .caso-resultado {
+      margin-top: 0.8rem;
+      font-size: 0.8rem;
+      background: #0a2a2f;
+      padding: 0.5rem;
+      border-radius: 16px;
+    }
+    .site-footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid #0cf33;
+      margin-top: 3rem;
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+    i.icon-glow {
+      text-shadow: 0 0 3px #0cf;
+    }
+    button i {
+      pointer-events: none;
+    }
+  </style>
+  <!-- Archivos JS originales (se mantienen) -->
+  <link rel="stylesheet" href="css/estilos.css" /> <!-- original, pero el style prevalece -->
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <div class="radar-icon" aria-hidden="true">
+          <div class="radar-ring r1"></div>
+          <div class="radar-ring r2"></div>
+          <div class="radar-ring r3"></div>
+          <div class="radar-dot"></div>
+          <div class="radar-sweep"></div>
+        </div>
+        <div class="brand-text">
+          <span class="brand-acronym">F.A.N.I.</span>
+          <span class="brand-subtitle">Centro de Análisis de Fenómenos Anómalos — U.M.S.A.</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <span class="status-dot"></span>
+        <span class="status-label">SISTEMA ACTIVO</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-tag"><i class="fas fa-chart-line"></i> MÉTODOS NUMÉRICOS — DESAFÍO FINAL</div>
+      <h1 class="hero-title">Sistema Interactivo de<br><em>Simulación &amp; Análisis</em></h1>
+      <p class="hero-desc">Plataforma computacional para el rastreo, modelado cinemático y análisis estadístico de Fenómenos Aéreos No Identificados mediante métodos numéricos aplicados.</p>
+      <div class="hero-badges">
+        <span class="badge"><i class="fas fa-satellite-dish"></i> 7 Escenarios Activos</span>
+        <span class="badge"><i class="fas fa-chart-simple"></i> Visualización en Tiempo Real</span>
+        <span class="badge"><i class="fas fa-database"></i> Casos de Estudio Preconfigurados</span>
+      </div>
+    </div>
+  </section>
+
+  <nav class="scenario-nav" id="main-nav">
+    <div class="nav-inner">
+      <button class="nav-btn active" data-target="escA"><i class="fas fa-radar"></i> A · Radar</button>
+      <button class="nav-btn" data-target="escB"><i class="fas fa-charging-station"></i> B · EDO</button>
+      <button class="nav-btn" data-target="escC"><i class="fas fa-chart-line"></i> C · Interpolación</button>
+      <button class="nav-btn" data-target="escD"><i class="fas fa-chart-area"></i> D · Integración</button>
+      <button class="nav-btn" data-target="escE"><i class="fas fa-calculator"></i> E · Raíces</button>
+      <button class="nav-btn" data-target="escF"><i class="fas fa-triangle-exclamation"></i> F · Condición</button>
+      <button class="nav-btn" data-target="escG"><i class="fas fa-users"></i> G · Dinámica Social</button>
+      <button class="nav-btn nav-btn--casos" data-target="casos"><i class="fas fa-star-of-life"></i> ★ Casos de Estudio</button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <!-- Escenario A -->
+    <section class="scenario-panel active" id="escA">
+      <div class="panel-header">
+        <div class="panel-tag"><i class="fas fa-radar"></i> Escenario A · Álgebra Lineal</div>
+        <h2 class="panel-title">Triangulación de Radar y Localización Espacial</h2>
+        <p class="panel-desc">Tres estaciones de radar resuelven la posición tridimensional (x, y, z) del FANI interceptando señales simultáneas.</p>
+      </div>
+      <div class="panel-body">
+        <div class="control-card"><h3 class="card-title"><i class="fas fa-sliders-h"></i> Parámetros del Radar</h3>
+          <div class="form-section-label">Método iterativo</div>
+          <select id="aMetodo" class="input-select"><option value="gauss-seidel">Gauss-Seidel</option><option value="jacobi">Jacobi</option></select>
+          <div class="form-section-label">Matriz aumentada [A|b]</div>
+          <div class="matrix-grid" id="aMatrizGrid">
+            <input type="number" class="matrix-cell" id="a00" value="4" /><input type="number" class="matrix-cell" id="a01" value="1" /><input type="number" class="matrix-cell" id="a02" value="-1" /><span class="matrix-sep">|</span><input type="number" class="matrix-cell" id="ab0" value="3" />
+            <input type="number" class="matrix-cell" id="a10" value="2" /><input type="number" class="matrix-cell" id="a11" value="5" /><input type="number" class="matrix-cell" id="a12" value="1" /><span class="matrix-sep">|</span><input type="number" class="matrix-cell" id="ab1" value="7" />
+            <input type="number" class="matrix-cell" id="a20" value="-1" /><input type="number" class="matrix-cell" id="a21" value="2" /><input type="number" class="matrix-cell" id="a22" value="6" /><span class="matrix-sep">|</span><input type="number" class="matrix-cell" id="ab2" value="10" />
+          </div>
+          <div class="form-row"><div class="form-group"><label>Tolerancia</label><input type="number" id="aTol" value="0.0001" step="0.0001" class="input-field" /></div>
+          <div class="form-group"><label>Máx. iteraciones</label><input type="number" id="aMaxIter" value="50" class="input-field" /></div></div>
+          <div class="form-section-label">Perturbación electromagnética (%)</div>
+          <input type="number" id="aPerturbacion" value="5" class="input-field" />
+          <button class="btn-run" onclick="ejecutarEscenarioA()"><i class="fas fa-location-dot"></i> CALCULAR POSICIÓN</button>
+        </div>
+        <div class="results-card"><div id="aError" class="error-msg hidden"></div><div id="aResultados" class="results-block hidden"><div class="result-highlight" id="aSolucion"></div><div class="result-highlight" id="aNumCond"></div></div><div id="aTabla" class="tabla-wrapper"></div><div id="aGrafico" class="chart-container"></div><div id="aPerturbadoResultado" class="perturbado-block hidden"></div></div>
+      </div>
+    </section>
+
+    <!-- Escenario B -->
+    <section class="scenario-panel" id="escB"><div class="panel-header"><div class="panel-tag"><i class="fas fa-charging-station"></i> Escenario B · EDO</div><h2 class="panel-title">Simulación de Descenso Cinemático</h2><p class="panel-desc">dH/dt = Empuje(t) − Atracción(t)</p></div>
+      <div class="panel-body"><div class="control-card"><h3 class="card-title"><i class="fas fa-chart-line"></i> Parámetros</h3>
+        <select id="bMetodo" class="input-select"><option value="rk4">Runge-Kutta 4 (RK4)</option><option value="heun">Heun</option><option value="euler">Euler</option></select>
+        <div class="form-row"><div class="form-group"><label>Altitud inicial (m)</label><input type="number" id="bH0" value="15000" class="input-field" /></div><div class="form-group"><label>Paso dt (s)</label><input type="number" id="bDt" value="0.5" class="input-field" /></div></div>
+        <div class="form-row"><div class="form-group"><label>Pérdida fija (m/s)</label><input type="number" id="bPerdida" value="1500" class="input-field" /></div><div class="form-group"><label>Empuje magnético</label><input type="number" id="bEmpuje" value="400" class="input-field" /></div></div>
+        <div class="form-row"><div class="form-group"><label>Alarma crítica (m)</label><input type="number" id="bHCrit" value="2000" class="input-field" /></div><div class="form-group"><label>Tmax simulación</label><input type="number" id="bTMax" value="30" class="input-field" /></div></div>
+        <button class="btn-run" onclick="ejecutarEscenarioB()"><i class="fas fa-play"></i> SIMULAR DESCENSO</button>
+      </div><div class="results-card"><div id="bError" class="error-msg hidden"></div><div id="bResultados" class="results-block hidden"><div class="result-highlight" id="bTiempoArribo"></div></div><div id="bGrafico" class="chart-container"></div></div></div>
+    </section>
+
+    <!-- Escenario C (interpolación) -->
+    <section class="scenario-panel" id="escC"><div class="panel-header"><div class="panel-tag"><i class="fas fa-chart-line"></i> Escenario C · Interpolación</div><h2 class="panel-title">Reconstrucción de Ruta de Vuelo</h2><p class="panel-desc">Modelado continuo a partir de datos dispersos.</p></div>
+      <div class="panel-body"><div class="control-card"><h3 class="card-title"><i class="fas fa-vector-square"></i> Datos</h3><select id="cMetodo" class="input-select"><option value="lagrange">Lagrange</option><option value="newton">Newton</option><option value="spline">Splines Cúbicos</option></select>
+        <div class="form-section-label">Puntos conocidos (t, H)</div><div class="puntos-container" id="cPuntos"><div class="punto-row"><label>t</label><input type="number" class="input-field pt" value="1" /><label>H</label><input type="number" class="input-field ph" value="800" /><button class="btn-remove" onclick="removePunto(this)">✕</button></div><div class="punto-row"><label>t</label><input type="number" class="input-field pt" value="5" /><label>H</label><input type="number" class="input-field ph" value="1200" /><button class="btn-remove" onclick="removePunto(this)">✕</button></div><div class="punto-row"><label>t</label><input type="number" class="input-field pt" value="10" /><label>H</label><input type="number" class="input-field ph" value="2500" /><button class="btn-remove" onclick="removePunto(this)">✕</button></div></div>
+        <button class="btn-secondary" onclick="addPunto()"><i class="fas fa-plus"></i> Agregar punto</button>
+        <div class="form-row" style="margin-top:1rem;"><div class="form-group"><label>Tiempo a interpolar (s)</label><input type="number" id="cTiempo" value="3" class="input-field" /></div></div>
+        <button class="btn-run" onclick="ejecutarEscenarioC()"><i class="fas fa-chart-simple"></i> INTERPOLAR POSICIÓN</button>
+      </div><div class="results-card"><div id="cError" class="error-msg hidden"></div><div id="cResultados" class="results-block hidden"><div class="result-highlight" id="cValorInterpolado"></div></div><div id="cGrafico" class="chart-container"></div></div></div>
+    </section>
+
+    <!-- Escenario D -->
+    <section class="scenario-panel" id="escD"><div class="panel-header"><div class="panel-tag"><i class="fas fa-chart-area"></i> Escenario D · Integración</div><h2 class="panel-title">Desplazamiento Total Acumulado</h2><p class="panel-desc">Integración de velocidad vs tiempo.</p></div>
+      <div class="panel-body"><div class="control-card"><select id="dMetodo" class="input-select"><option value="simpson13">Simpson 1/3</option><option value="simpson38">Simpson 3/8</option><option value="trapecio">Trapecio</option></select><select id="dFuncion" class="input-select"><option value="sinusoidal">v(t)=500+300·sin(0.1t)</option><option value="acelerada">200+50t−t²</option><option value="pulso">800·e^(-0.05t)+100</option></select>
+        <div class="form-row"><div class="form-group"><label>t inicio</label><input type="number" id="dA" value="0" class="input-field" /></div><div class="form-group"><label>t fin</label><input type="number" id="dB" value="3600" class="input-field" /></div></div><div class="form-group"><label>Subintervalos n</label><input type="number" id="dN" value="100" class="input-field" /></div>
+        <button class="btn-run" onclick="ejecutarEscenarioD()"><i class="fas fa-road"></i> CALCULAR DESPLAZAMIENTO</button>
+      </div><div class="results-card"><div id="dError" class="error-msg hidden"></div><div id="dResultados" class="results-block hidden"><div class="result-highlight" id="dDistanciaNum"></div><div class="result-highlight" id="dDistanciaLin"></div><div class="result-highlight" id="dDesviacion"></div></div><div id="dGrafico" class="chart-container"></div></div></div>
+    </section>
+
+    <!-- Escenario E -->
+    <section class="scenario-panel" id="escE"><div class="panel-header"><div class="panel-tag"><i class="fas fa-calculator"></i> Escenario E · Raíces</div><h2 class="panel-title">Umbral de Propulsión y Equilibrio Térmico</h2><p class="panel-desc">f(v)=0 donde se iguala energía térmica.</p></div>
+      <div class="panel-body"><div class="control-card"><select id="eMetodo" class="input-select"><option value="newton">Newton-Raphson</option><option value="biseccion">Bisección</option><option value="secante">Secante</option></select><select id="eFuncion" class="input-select"><option value="termica">f(v)=0.002v²+0.5v − EnergíaSensor</option><option value="friccion">v·ln(v) − EnergíaSensor·0.012</option></select>
+        <div class="form-row"><div class="form-group"><label>Energía base</label><input type="number" id="eEnergiaBase" value="500" class="input-field" /></div><div class="form-group"><label>Radiación emitida</label><input type="number" id="eEnergiaRad" value="580" class="input-field" /></div></div>
+        <div id="eBiseccionParams"><div class="form-row"><div class="form-group"><label>Límite inferior</label><input type="number" id="eA" value="0.1" class="input-field" /></div><div class="form-group"><label>Límite superior</label><input type="number" id="eB" value="600" class="input-field" /></div></div></div>
+        <div id="eNewtonParams"><div class="form-group"><label>v₀ inicial</label><input type="number" id="eV0" value="100" class="input-field" /></div></div>
+        <div class="form-row"><div class="form-group"><label>Tolerancia</label><input type="number" id="eTol" value="0.0001" class="input-field" /></div><div class="form-group"><label>Max iter</label><input type="number" id="eMaxIter" value="50" class="input-field" /></div></div>
+        <button class="btn-run" onclick="ejecutarEscenarioE()"><i class="fas fa-crosshairs"></i> ENCONTRAR UMBRAL</button>
+      </div><div class="results-card"><div id="eError" class="error-msg hidden"></div><div id="eResultados" class="results-block hidden"><div class="result-highlight" id="eRaiz"></div><div class="result-highlight" id="eConvergencia"></div></div><div id="eTabla" class="tabla-wrapper"></div><div id="eGrafico" class="chart-container"></div></div></div>
+    </section>
+
+    <!-- Escenario F -->
+    <section class="scenario-panel" id="escF"><div class="panel-header"><div class="panel-tag"><i class="fas fa-shield-halved"></i> Escenario F · Mal Condicionamiento</div><h2 class="panel-title">Distorsión Electromagnética y Condición</h2><p class="panel-desc">Análisis de estabilidad ante perturbaciones.</p></div>
+      <div class="panel-body"><div class="control-card"><div class="matrix-grid" id="fMatrizGrid"><input type="number" class="matrix-cell" id="f00" value="2" /><input type="number" class="matrix-cell" id="f01" value="1" /><input type="number" class="matrix-cell" id="f02" value="0" /><span class="matrix-sep">|</span><input type="number" class="matrix-cell" id="fb0" value="3" /><input type="number" class="matrix-cell" id="f10" value="1" /><input type="number" class="matrix-cell" id="f11" value="3" /><input type="number" class="matrix-cell" id="f12" value="1" /><span class="matrix-sep">|</span><input type="number" class="matrix-cell" id="fb1" value="6" /><input type="number" class="matrix-cell" id="f20" value="0" /><input type="number" class="matrix-cell" id="f21" value="1" /><input type="number" class="matrix-cell" id="f22" value="2" /><span class="matrix-sep">|</span><input type="number" class="matrix-cell" id="fb2" value="5" /></div>
+        <div class="form-group"><label>Porcentaje perturbación (%)</label><input type="number" id="fPerturbPct" value="5" class="input-field" /></div>
+        <button class="btn-run" onclick="ejecutarEscenarioF()"><i class="fas fa-chart-line"></i> ANALIZAR ESTABILIDAD</button>
+      </div><div class="results-card"><div id="fError" class="error-msg hidden"></div><div id="fResultados" class="results-block hidden"><div class="result-highlight" id="fSolOriginal"></div><div class="result-highlight" id="fSolPerturbada"></div><div class="result-highlight" id="fNumCond"></div><div class="result-highlight" id="fVeredicto"></div></div><div id="fGrafico" class="chart-container"></div></div></div>
+    </section>
+
+    <!-- Escenario G -->
+    <section class="scenario-panel" id="escG"><div class="panel-header"><div class="panel-tag"><i class="fas fa-users"></i> Escenario G · Dinámica Social</div><h2 class="panel-title">Propagación del Pánico Social</h2><p class="panel-desc">Modelo EDO: Escépticos, Alarmados, Medios.</p></div>
+      <div class="panel-body"><div class="control-card"><select id="gMetodo" class="input-select"><option value="rk4">RK4 vectorizado</option><option value="heun">Heun vectorizado</option></select>
+        <div class="form-row"><div class="form-group"><label>E₀</label><input type="number" id="gE0" value="900" class="input-field"/></div><div class="form-group"><label>A₀</label><input type="number" id="gA0" value="50" class="input-field"/></div><div class="form-group"><label>M₀</label><input type="number" id="gM0" value="5" class="input-field"/></div></div>
+        <div class="form-row"><div class="form-group"><label>a contagio</label><input type="number" id="ga" value="0.0005" class="input-field"/></div><div class="form-group"><label>b moderación</label><input type="number" id="gb" value="0.01" class="input-field"/></div></div>
+        <div class="form-row"><div class="form-group"><label>c control</label><input type="number" id="gc" value="0.02" class="input-field"/></div><div class="form-group"><label>k amplificación</label><input type="number" id="gk" value="0.005" class="input-field"/></div></div>
+        <div class="form-row"><div class="form-group"><label>r decaimiento</label><input type="number" id="gr" value="0.03" class="input-field"/></div><div class="form-group"><label>Tmax días</label><input type="number" id="gTMax" value="60" class="input-field"/></div></div>
+        <button class="btn-run" onclick="ejecutarEscenarioG()"><i class="fas fa-chart-line"></i> SIMULAR DINÁMICA</button>
+      </div><div class="results-card"><div id="gError" class="error-msg hidden"></div><div id="gResultados" class="results-block hidden"><div class="result-highlight" id="gPicoAlarma"></div><div class="result-highlight" id="gVeredicto"></div></div><div id="gGrafico" class="chart-container"></div></div></div>
+    </section>
+
+    <!-- Casos de Estudio -->
+    <section class="scenario-panel" id="casos"><div class="panel-header"><div class="panel-tag"><i class="fas fa-star"></i> Casos de Estudio Obligatorios</div><h2 class="panel-title">Pruebas Preconfiguradas para Evaluación</h2><p class="panel-desc">Tres casos que demuestran el funcionamiento correcto de los algoritmos.</p></div>
+      <div class="casos-grid"><div class="caso-card"><div class="caso-num">01</div><div class="caso-header"><span class="caso-tag">Interpolación · Escenario C</span><h3 class="caso-title">Prueba de Trayectoria del FANI</h3></div><div class="caso-params"><div class="param-row"><span>Segundo 1</span><span>800 m</span></div><div class="param-row"><span>Segundo 5</span><span>1 200 m</span></div><div class="param-row"><span>Segundo 10</span><span>2 500 m</span></div><div class="param-row highlight"><span>Calcular t=3</span><span>interpolado</span></div></div><button class="btn-caso" onclick="ejecutarCaso1()"><i class="fas fa-play"></i> EJECUTAR CASO 1</button><div id="caso1Resultado" class="caso-resultado hidden"></div></div>
+        <div class="caso-card"><div class="caso-num">02</div><div class="caso-header"><span class="caso-tag">EDO · Escenario B</span><h3 class="caso-title">Prueba de Descenso con Aceleración</h3></div><div class="caso-params"><div class="param-row"><span>Altitud inicial</span><span>15 000 m</span></div><div class="param-row"><span>Pérdida fija</span><span>1 500 m/s</span></div><div class="param-row"><span>Empuje magnético</span><span>400 m/s</span></div><div class="param-row highlight"><span>Alarma 2 000 m</span><span>tiempo crítico</span></div></div><button class="btn-caso" onclick="ejecutarCaso2()"><i class="fas fa-play"></i> EJECUTAR CASO 2</button><div id="caso2Resultado" class="caso-resultado hidden"></div></div>
+        <div class="caso-card"><div class="caso-num">03</div><div class="caso-header"><span class="caso-tag">Raíces · Escenario E</span><h3 class="caso-title">Prueba de Equilibrio de Energía</h3></div><div class="caso-params"><div class="param-row"><span>Energía sensor base</span><span>500 u.</span></div><div class="param-row"><span>Radiación emitida</span><span>580 u.</span></div><div class="param-row highlight"><span>Punto de quiebre</span><span>f(v)=0</span></div></div><button class="btn-caso" onclick="ejecutarCaso3()"><i class="fas fa-play"></i> EJECUTAR CASO 3</button><div id="caso3Resultado" class="caso-resultado hidden"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="footer-inner"><div class="footer-brand">F.A.N.I. Control Center</div><div class="footer-meta">Universidad Mayor de San Andrés · Métodos Numéricos · 2025</div></div></footer>
+
+  <script src="js/metodos.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // navegación entre paneles
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-target');
+        document.querySelectorAll('.scenario-panel').forEach(panel => panel.classList.remove('active'));
+        document.getElementById(target).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
